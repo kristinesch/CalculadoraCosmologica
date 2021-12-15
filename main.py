@@ -12,20 +12,13 @@ from matplotlib import pyplot as plt
 
 def f(x,t,H0,Om_M,Om_R,Om_Lambda):
     a=x[0]
-    #return np.array([x[1],-(a/2)*H0*H0*(Om_M/(np.power(a,3))+2*Om_R/(np.power(a,4))-2*Om_Lambda)])
-    return np.array([x[1],-(1/2)*H0*H0*(Om_M/(np.power(a,1))+2*Om_R/(np.power(a,2))-2*Om_Lambda)])
-#testing....
-def g(x,t,b,c):
-    a=x[0]
-    return np.array([x[1],-a*c*(b/np.power(a,3)+c)])
+    return np.array([x[1],-(a/2)*H0*H0*(Om_M/(np.power(a,3))+2*Om_R/(np.power(a,4))-2*Om_Lambda)])
+
     
 def calculate_a_H(t,H0,Om_M,Om_R,Om_Lambda):
-    x0=np.array([H0,1])
+    x0=np.array([1,H0])
     x=integrate.odeint(f,x0,t, args=(H0,Om_M,Om_R,Om_Lambda))
-    #b=2
-    #c=2
-    #x=integrate.odeint(g,x0,t,args=(b,c))
-    #print(x)
+
     a=x[:,0]
     adot=x[:,1]
     H=a/adot
@@ -63,7 +56,7 @@ def a_and_H(t,H0s,Om_Ms,Om_Rs,Om_Lambdas):
     plot_a(t,aList,H0s,Om_Ms,Om_Rs,Om_Lambdas,"a_fig")
     plot_H(t,HList,H0s,Om_Ms,Om_Rs,Om_Lambdas,"H_fig")
 
-
+#testing stuff...
 def test():
     t=np.linspace(0,10,1000)
     H0=67
@@ -156,9 +149,11 @@ def distances(z,Om_R, Om_M, Om_Lambda, H0,k):
 
 
 def main():
-
+    year=365*24*60*60
     #Take as input?
-    H0s=[67,67,67,67,67]
+    H0=1000/3.086e22*(3600*24*365*10e09)*67
+    
+    H0s=[H0,H0,H0,H0,H0]
     Om_Ms=[0,0.3,0.5,0,0.4]
     Om_Rs=[0,0,0,0.5,0]
     Om_Lambdas=[0,0,0,0,0.5]
@@ -171,9 +166,9 @@ def main():
     z=np.linspace(z_min,z_max,Nz)
 
     Nt=10000
-    year=365*24*60*60
-    t_min=0
-    t_max=1000
+    
+    t_min=-10
+    t_max=20
     t=np.linspace(t_min,t_max,Nt)
 
     #distances(z,Om_Rs, Om_Ms, Om_Lambdas, H0s,k)
@@ -186,7 +181,7 @@ def main():
 main()
 
 
-
+#testing odeint...
 # def k(x,t,a,b):
 #     return np.array([x[1],a+b])
 
@@ -196,3 +191,4 @@ main()
 # sol=integrate.odeint(k,[0,0],t,args=(a,b))
 # plt.plot(t,sol[:,0])
 # plt.show()
+
