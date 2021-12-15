@@ -5,7 +5,10 @@ import scipy.constants as const
 import math
 from matplotlib import pyplot as plt
 
-#Fjerne k
+#TODO:
+#remove k
+#fix bug for odeint
+#fix H in legend
 
 """ a(t) and H(t)-----------------------------------------------------------------"""
 def g(y, t, H0, Om_M, Om_R, Om_Lambda):
@@ -20,7 +23,20 @@ def calculate_a(y0,t1,t2,H0,Om_M,Om_R,Om_Lambda):
     sol2 = integrate.odeint(g, y0, t2, args=(H0, Om_M, Om_R, Om_Lambda))
     return sol1,sol2
 
-def a_and_H(y0,t1,t2,H0List,Om_MList,Om_RList,Om_LambdaList,H0):
+def g2(t,a,c):
+    return c/a
+
+
+
+def calculate_dP(t,a,c):
+    aint=[]
+    for ti in t:
+        x=integrate.quad(g2,0,ti,args=(a,c))
+        aint.append(x[0])
+    return a*np.array(aint)
+
+
+def time_params(y0,t1,t2,H0List,Om_MList,Om_RList,Om_LambdaList,Hlist):
     c=const.c
     sol1List=[]
     sol2List=[]
@@ -33,6 +49,7 @@ def a_and_H(y0,t1,t2,H0List,Om_MList,Om_RList,Om_LambdaList,H0):
     figa, axa=plt.subplots(1,1)
     figH, axH=plt.subplots(1,1)
     figdH, axdH=plt.subplots(1,1)
+    figdP, axdP=plt.subplots(1,1)
 
     for i in range(len(sol1List)):
         a1=sol1List[i][:,0]
@@ -51,16 +68,23 @@ def a_and_H(y0,t1,t2,H0List,Om_MList,Om_RList,Om_LambdaList,H0):
         #dH1 = dH1[~np.isnan(dH1)]
         #dH2 = dH2[~np.isnan(dH2)]
 
+        dP1=calculate_dP(t1,a1,c)
+        #dP2=calculate_dP(t2,a2,c)
+
         axa.plot(t1,a1, color=colors[i],label="$\Omega_M=$"+str(Om_MList[i])+" $, \Omega_R=$"+str(Om_RList[i])+
-        "$, \Omega_\Lambda=$"+str(Om_LambdaList[i])+" $, H_0$="+str(H0))
+        "$, \Omega_\Lambda=$"+str(Om_LambdaList[i])+" $, H_0$="+str(Hlist[i]))
         axa.plot(t2,a2,color=colors[i])
 
         axH.plot(t1,H1, color=colors[i],label="$\Omega_M=$"+str(Om_MList[i])+" $, \Omega_R=$"+str(Om_RList[i])+
-        "$, \Omega_\Lambda=$"+str(Om_LambdaList[i])+" $, H_0$="+str(H0))
+        "$, \Omega_\Lambda=$"+str(Om_LambdaList[i])+" $, H_0$="+str(Hlist[i]))
         axH.plot(t2,H2,color=colors[i])
 
         axdH.plot(t1,dH1, color=colors[i],label="$\Omega_M=$"+str(Om_MList[i])+" $, \Omega_R=$"+str(Om_RList[i])+
-        "$, \Omega_\Lambda=$"+str(Om_LambdaList[i])+" $, H_0$="+str(H0))
+        "$, \Omega_\Lambda=$"+str(Om_LambdaList[i])+" $, H_0$="+str(Hlist[i]))
+        axdH.plot(t2,dH2,color=colors[i])
+
+        axdP.plot(t1,dP1, color=colors[i],label="$\Omega_M=$"+str(Om_MList[i])+" $, \Omega_R=$"+str(Om_RList[i])+
+        "$, \Omega_\Lambda=$"+str(Om_LambdaList[i])+" $, H_0$="+str(Hlist[i]))
         axdH.plot(t2,dH2,color=colors[i])
 
     figa.suptitle("a(t)")
@@ -86,6 +110,13 @@ def a_and_H(y0,t1,t2,H0List,Om_MList,Om_RList,Om_LambdaList,H0):
     figdH.legend(loc="lower right")
     figdH.savefig("dH_fig")
 
+    figdP.suptitle("$d_P(t)$")
+    axdP.set_xlabel("t [Gyr]")
+    axdP.set_ylabel("$d_P(t)$")
+    axdP.set_yscale("log")
+    figdP.legend(loc="lower right")
+    figdP.savefig("dP_fig")
+
     plt.show()
 
 
@@ -93,7 +124,7 @@ def a_and_H(y0,t1,t2,H0List,Om_MList,Om_RList,Om_LambdaList,H0):
 
 """dL and dA------------------------------------------------------------------"""
 
-def E(z,Om_R, Om_M, Om_Lambda, Om_K): #z is a np array
+def E(z,Om_R, Om_M, Om_Lambda, Om_K): 
     pM=np.power((1+z),3)
     pR=np.power((1+z),4)
     pK=np.power((1+z),2)
@@ -121,10 +152,11 @@ def calculate_dL(z,Om_R, Om_M, Om_Lambda, Om_K,H0):
 def calculate_dA(z,dL):
     return (np.power(1+z,-2))*dL
 
-def plot_distance(z,ds,filename,dstring,Om_M,Om_R,Om_Lambda,H): #ds a list
+def plot_distance(z,ds,filename,dstring,Om_M,Om_R,Om_Lambda,Hlist): 
+    colors=["red","blue","green","orange","purple","black"]
     fig,ax=plt.subplots(1,1)
     for i, di in enumerate(ds):
-        ax.plot(z,di,label="$\Omega_M=$"+str(Om_M[i])+" $,\Omega_R=$"+str(Om_R[i])+"$, \Omega_\Lambda=$"+str(Om_Lambda[i])+" $, H_0$="+str(H))
+        ax.plot(z,di,color=colors[i],label="$\Omega_M=$"+str(Om_M[i])+" $,\Omega_R=$"+str(Om_R[i])+"$, \Omega_\Lambda=$"+str(Om_Lambda[i])+" $, H_0$="+str(Hlist[i]))
     ax.set_xlabel("z")
     ax.set_ylabel(dstring)
     fig.legend()
@@ -138,7 +170,7 @@ def calculate_dA_dL(z,Om_R, Om_M, Om_Lambda, H0,k):
     return dL,dA
 
 
-def distances(z,Om_R, Om_M, Om_Lambda, H0,k,H):
+def redshift_params(z,Om_R, Om_M, Om_Lambda, H0,k,Hlist):
     dLs=[]
     dAs=[]   
     for i in range(len(H0)):
@@ -146,8 +178,8 @@ def distances(z,Om_R, Om_M, Om_Lambda, H0,k,H):
         dLs.append(dLi)
         dAs.append(dAi)
 
-    plot_distance(z,dAs,"dAfig","dA",Om_M,Om_R,Om_Lambda,H)
-    plot_distance(z,dLs,"dLfig","dL",Om_M,Om_R,Om_Lambda,H)
+    plot_distance(z,dAs,"dAfig","dA",Om_M,Om_R,Om_Lambda,Hlist)
+    plot_distance(z,dLs,"dLfig","dL",Om_M,Om_R,Om_Lambda,Hlist)
 
 
 """--------------------------------------------------------------------"""
@@ -163,9 +195,10 @@ def main():
     Om_Ms=[0.3,0.3,5,1,0,0.3]
     Om_Rs=[0,0,0,0,1,0]
     Om_Lambdas=[0.7,0,0,0,0,0.7]
-
+    y0=np.array([1,H0])
     
     k=0
+    Hlist=[H,H,H,H,H,0.8*H]
 
     Nz=1000
     z_min=0
@@ -173,18 +206,16 @@ def main():
     z=np.linspace(z_min,z_max,Nz)
 
     Nt=1000
-    
     t_min=-14.15
     t_max=30
     t1 = np.linspace(0, t_max, Nt)
     t2 = np.linspace(0, t_min, Nt)
 
-    y0=np.array([1,H0])
 
-    distances(z,Om_Rs, Om_Ms, Om_Lambdas, H0s,k,H)
+    redshift_params(z,Om_Rs, Om_Ms, Om_Lambdas, H0s,k,Hlist)
 
 
-    a_and_H(y0,t1, t2, H0s, Om_Ms,Om_Rs,Om_Lambdas,H)
+    time_params(y0,t1, t2, H0s, Om_Ms,Om_Rs,Om_Lambdas,Hlist)
 
 
 
