@@ -7,11 +7,12 @@ from matplotlib import pyplot as plt
 
 #TODO fiks dL for neg rot
 #Funker jo ikke for omega_K lik 0 ??
+#Fjerne k
 
 """ a(t) and H(t)-----------------------------------------------------------------"""
 def g(y, t, H0, Om_M, Om_R, Om_Lambda):
     a, aprime = y
-    dydt = [aprime, -(a/2)*H0**2*(Om_M/a**3+2*Om_R/a**4-2*Om_Lambda)]
+    dydt = [aprime, -(a/2)*H0**2*(Om_M/(a**3)+2*Om_R/(a**4)-2*Om_Lambda)]
     return dydt
 
 # def f(x,t,H0,Om_M,Om_R,Om_Lambda):
@@ -55,10 +56,16 @@ def a_and_H(y0,t1,t2,H0List,Om_MList,Om_RList,Om_LambdaList):
         a2=sol2List[i][:,0]
         adot1=sol1List[i][:,1]
         adot2=sol2List[i][:,1]
+
+        #x = x[~numpy.isnan(x)] remove nans?
+
         H1=(adot1/a1)*(3.086e22/(1e3*3600*24*365*10**9))
         H2=(adot2/a2)*(3.086e22/(1e3*3600*24*365*10**9))
         dH1=c/H1
         dH2=c/H2
+
+        #dH1 = dH1[~np.isnan(dH1)]
+        #dH2 = dH2[~np.isnan(dH2)]
 
         axa.plot(t1,a1, color=colors[i],label="$\Omega_M=$"+str(Om_MList[i])+" $, \Omega_R=$"+str(Om_RList[i])+
         "$, \Omega_\Lambda=$"+str(Om_LambdaList[i])+" $, H_0$="+str(round(H0List[i],2)))
@@ -91,8 +98,8 @@ def a_and_H(y0,t1,t2,H0List,Om_MList,Om_RList,Om_LambdaList):
     axdH.set_xlabel("t [Gyr]")
     axdH.set_ylabel("$d_H(t)$")
     axdH.set_yscale("log")
-    #axdH.set_ylim(0,300)
-    figdH.legend(loc="upper right")
+    axdH.set_ylim(1e04,1e09)
+    figdH.legend(loc="lower right")
     figdH.savefig("dH_fig")
 
     plt.show()
@@ -189,18 +196,23 @@ def integrateE(z,Om_R, Om_M, Om_Lambda, Om_K):
 def calculate_dL(z,Om_R, Om_M, Om_Lambda, Om_K,H0):
     #Eintegrated=integrate.quad(E,z[0],z[-1],(Om_R, Om_M, Om_Lambda, Om_K))
     Eintegrated=integrateE(z,Om_R, Om_M, Om_Lambda, Om_K)
-    print("E:",Eintegrated)
+    #print("E:",Eintegrated)
     #print(const.c*(1+z)/(H0*math.sqrt(Om_K)))
-    print(np.sinh(Eintegrated))
-    if Om_K>=0:
+    #print(np.sinh(Eintegrated))
+    if Om_K>0:
+        print("pos")
         return const.c*(1+z)/(H0*math.sqrt(Om_K))*np.sinh(math.sqrt(Om_K)*Eintegrated)
+    elif Om_K==0:
+        print("null")
+        return const.c*(1+z)/H0*Eintegrated
     else: #squareroot gives imaginary number, with i counteracted by the fact that sinh(ix)=isin(x)
         #return math.sqrt(abs(Om_K))*Eintegrated
+        print("neg")
         return const.c*(1+z)/(H0*math.sqrt(abs(Om_K)))*np.sin(math.sqrt(abs(Om_K))*Eintegrated) #denne er det noe rart med... skal vel egt være minustegn?
 
 
 def calculate_dA(z,dL):
-    return (1+np.power(z,-2))*dL
+    return (np.power(1+z,-2))*dL
 
 def plot_distance(z,ds,filename,dstring,Om_M,Om_R,Om_Lambda,H0): #ds a list
     #colors=[""]
@@ -254,14 +266,14 @@ def main():
     Om_Rs=[0,0,0,0]
     Om_Lambdas=[0,0.7,0,0]
 
-    k=1
+    k=0
 
     Nz=1000
-    z_min=-15
+    z_min=0
     z_max=15
     z=np.linspace(z_min,z_max,Nz)
 
-    Nt=1000
+    Nt=10000
     
     t_min=-14.15
     t_max=30
@@ -270,15 +282,11 @@ def main():
 
     y0=np.array([1,H0])
 
-    #distances(z,Om_Rs, Om_Ms, Om_Lambdas, H0s,k)
+    distances(z,Om_Rs, Om_Ms, Om_Lambdas, H0s,k)
 
-    Om_M = 0.3
-    Om_R = 0
-    Om_Lambda = 0.7
 
-    #calculate_a_H(y0,t1,t2,H0,Om_M,Om_R,Om_Lambda)
 
-    a_and_H(y0,t1, t2, H0s, Om_Ms,Om_Rs,Om_Lambdas)
+    #a_and_H(y0,t1, t2, H0s, Om_Ms,Om_Rs,Om_Lambdas)
 
 
 
