@@ -5,8 +5,6 @@ import scipy.constants as const
 import math
 from matplotlib import pyplot as plt
 
-#TODO fiks dL for neg rot
-#Funker jo ikke for omega_K lik 0 ??
 #Fjerne k
 
 """ a(t) and H(t)-----------------------------------------------------------------"""
@@ -15,26 +13,11 @@ def g(y, t, H0, Om_M, Om_R, Om_Lambda):
     dydt = [aprime, -(a/2)*H0**2*(Om_M/(a**3)+2*Om_R/(a**4)-2*Om_Lambda)]
     return dydt
 
-# def f(x,t,H0,Om_M,Om_R,Om_Lambda):
-#     return np.array([x[1],-(x[0]/2)*H0*H0*(Om_M/(np.power(x[0],3))+2*Om_R/(np.power(x[0],4))-2*Om_Lambda)])
 
 def calculate_a(y0,t1,t2,H0,Om_M,Om_R,Om_Lambda):
 
     sol1 = integrate.odeint(g, y0, t1, args=(H0, Om_M, Om_R, Om_Lambda))
     sol2 = integrate.odeint(g, y0, t2, args=(H0, Om_M, Om_R, Om_Lambda))
-
-    # a=np.append(sol2[:,0],sol1[:,0])
-    # adot=np.append(sol2[:,1],sol1[:,1])
-    # t=np.append(t2,t1)
-    # print(t,a,adot)
-
-    # plt.plot(t1, sol1[:, 0], 'b', t2, sol2[:,0], 'r', label='a(t)')
-    # #plt.plot(t,a, 'r', label='a(t)')
-    # # plt.plot(t, sol[:, 1], 'g', label='omega(t)')
-    # plt.legend(loc='best')
-    # plt.xlabel('t')
-    # plt.grid()
-    # plt.show()
     return sol1,sol2
 
 def a_and_H(y0,t1,t2,H0List,Om_MList,Om_RList,Om_LambdaList,H0):
@@ -125,14 +108,10 @@ def integrateE(z,Om_R, Om_M, Om_Lambda, Om_K):
 
 
 def calculate_dL(z,Om_R, Om_M, Om_Lambda, Om_K,H0):
-
     Eintegrated=integrateE(z,Om_R, Om_M, Om_Lambda, Om_K)
-
     if Om_K>0:
-        print("pos")
         return const.c*(1+z)/(H0*math.sqrt(Om_K))*np.sinh(math.sqrt(Om_K)*Eintegrated)
     elif Om_K==0:
-        print("null")
         return const.c*(1+z)/H0*Eintegrated
     else: #squareroot gives imaginary number, with i counteracted by the fact that sinh(ix)=isin(x)
         print("neg")
@@ -154,7 +133,6 @@ def plot_distance(z,ds,filename,dstring,Om_M,Om_R,Om_Lambda,H): #ds a list
 
 def calculate_dA_dL(z,Om_R, Om_M, Om_Lambda, H0,k):
     Om_K=1-Om_Lambda-Om_M-Om_R
-    print("K:",Om_K)
     dL=calculate_dL(z,Om_R, Om_M, Om_Lambda, Om_K,H0)
     dA=calculate_dA(z,dL)
     return dL,dA
