@@ -37,11 +37,11 @@ def calculate_a(y0,t1,t2,H0,Om_M,Om_R,Om_Lambda):
     # plt.show()
     return sol1,sol2
 
-def a_and_H(y0,t1,t2,H0List,Om_MList,Om_RList,Om_LambdaList):
+def a_and_H(y0,t1,t2,H0List,Om_MList,Om_RList,Om_LambdaList,H0):
     c=const.c
     sol1List=[]
     sol2List=[]
-    colors=["red","blue","green","orange"]
+    colors=["red","blue","green","orange","purple","black"]
     for i in range(len(H0List)):
         sol1,sol2=calculate_a(y0,t1,t2,H0List[i],Om_MList[i],Om_RList[i],Om_LambdaList[i])
         sol1List.append(sol1)
@@ -61,22 +61,23 @@ def a_and_H(y0,t1,t2,H0List,Om_MList,Om_RList,Om_LambdaList):
 
         H1=(adot1/a1)*(3.086e22/(1e3*3600*24*365*10**9))
         H2=(adot2/a2)*(3.086e22/(1e3*3600*24*365*10**9))
-        dH1=c/H1
-        dH2=c/H2
+        Mpc=3.0857e22
+        dH1=c/(H1)
+        dH2=c/(H2)
 
         #dH1 = dH1[~np.isnan(dH1)]
         #dH2 = dH2[~np.isnan(dH2)]
 
         axa.plot(t1,a1, color=colors[i],label="$\Omega_M=$"+str(Om_MList[i])+" $, \Omega_R=$"+str(Om_RList[i])+
-        "$, \Omega_\Lambda=$"+str(Om_LambdaList[i])+" $, H_0$="+str(round(H0List[i],2)))
+        "$, \Omega_\Lambda=$"+str(Om_LambdaList[i])+" $, H_0$="+str(H0))
         axa.plot(t2,a2,color=colors[i])
 
         axH.plot(t1,H1, color=colors[i],label="$\Omega_M=$"+str(Om_MList[i])+" $, \Omega_R=$"+str(Om_RList[i])+
-        "$, \Omega_\Lambda=$"+str(Om_LambdaList[i])+" $, H_0$="+str(round(H0List[i],2)))
+        "$, \Omega_\Lambda=$"+str(Om_LambdaList[i])+" $, H_0$="+str(H0))
         axH.plot(t2,H2,color=colors[i])
 
         axdH.plot(t1,dH1, color=colors[i],label="$\Omega_M=$"+str(Om_MList[i])+" $, \Omega_R=$"+str(Om_RList[i])+
-        "$, \Omega_\Lambda=$"+str(Om_LambdaList[i])+" $, H_0$="+str(round(H0List[i],2)))
+        "$, \Omega_\Lambda=$"+str(Om_LambdaList[i])+" $, H_0$="+str(H0))
         axdH.plot(t2,dH2,color=colors[i])
 
     figa.suptitle("a(t)")
@@ -89,7 +90,7 @@ def a_and_H(y0,t1,t2,H0List,Om_MList,Om_RList,Om_LambdaList):
 
     figH.suptitle("H(t)")
     axH.set_xlabel("t [Gyr]")
-    axH.set_ylabel("H(t)")
+    axH.set_ylabel("H(t) $[kms^{-1}Mpc^{-1}]$")
     axH.set_ylim(0,300)
     figH.legend(loc="center")
     figH.savefig("H_fig")
@@ -98,7 +99,7 @@ def a_and_H(y0,t1,t2,H0List,Om_MList,Om_RList,Om_LambdaList):
     axdH.set_xlabel("t [Gyr]")
     axdH.set_ylabel("$d_H(t)$")
     axdH.set_yscale("log")
-    axdH.set_ylim(1e04,1e09)
+    axdH.set_ylim(1e4,1e09)
     figdH.legend(loc="lower right")
     figdH.savefig("dH_fig")
 
@@ -214,11 +215,11 @@ def calculate_dL(z,Om_R, Om_M, Om_Lambda, Om_K,H0):
 def calculate_dA(z,dL):
     return (np.power(1+z,-2))*dL
 
-def plot_distance(z,ds,filename,dstring,Om_M,Om_R,Om_Lambda,H0): #ds a list
+def plot_distance(z,ds,filename,dstring,Om_M,Om_R,Om_Lambda,H): #ds a list
     #colors=[""]
     fig,ax=plt.subplots(1,1)
     for i, di in enumerate(ds):
-        ax.plot(z,di,label="$\Omega_M=$"+str(Om_M[i])+" $,\Omega_R=$"+str(Om_R[i])+"$, \Omega_\Lambda=$"+str(Om_Lambda[i])+" $, H_0$="+str(H0[i]))
+        ax.plot(z,di,label="$\Omega_M=$"+str(Om_M[i])+" $,\Omega_R=$"+str(Om_R[i])+"$, \Omega_\Lambda=$"+str(Om_Lambda[i])+" $, H_0$="+str(H))
     ax.set_xlabel("z")
     ax.set_ylabel(dstring)
     fig.legend()
@@ -238,7 +239,7 @@ def calculate_dA_dL(z,Om_R, Om_M, Om_Lambda, H0,k):
     return dL,dA
 
 
-def distances(z,Om_R, Om_M, Om_Lambda, H0,k):
+def distances(z,Om_R, Om_M, Om_Lambda, H0,k,H):
     #running distances etc
     dLs=[]
     dAs=[]   
@@ -247,8 +248,8 @@ def distances(z,Om_R, Om_M, Om_Lambda, H0,k):
         dLs.append(dLi)
         dAs.append(dAi)
 
-    plot_distance(z,dAs,"dAfig","dA",Om_M,Om_R,Om_Lambda,H0)
-    plot_distance(z,dLs,"dLfig","dL",Om_M,Om_R,Om_Lambda,H0)
+    plot_distance(z,dAs,"dAfig","dA",Om_M,Om_R,Om_Lambda,H)
+    plot_distance(z,dLs,"dLfig","dL",Om_M,Om_R,Om_Lambda,H)
 
 
 """--------------------------------------------------------------------"""
@@ -257,15 +258,18 @@ def distances(z,Om_R, Om_M, Om_Lambda, H0,k):
 
 def main():
     year=365*24*60*60
-    #Take as input?
-    H0=1000/3.086e22*(3600*24*365*10**9)*67
-    
-    #H0=67
-    H0s=[H0,H0,H0,H0]
-    Om_Ms=[0.3,0.3,5,1]
-    Om_Rs=[0,0,0,0]
-    Om_Lambdas=[0,0.7,0,0]
+    #H0=1000/3.086e22*(year*10**9)*67 
+    h=0.7
+    H=h*100
+    H0=H/(3.0857*1e19)*1e9*year #unit: per Gy
 
+    #H0=67
+    H0s=[H0,H0,H0,H0,H0,0.8*H0]
+    Om_Ms=[0.3,0.3,5,1,0,0.3]
+    Om_Rs=[0,0,0,0,1,0]
+    Om_Lambdas=[0.7,0,0,0,0,0.7]
+
+    
     k=0
 
     Nz=1000
@@ -273,7 +277,7 @@ def main():
     z_max=15
     z=np.linspace(z_min,z_max,Nz)
 
-    Nt=10000
+    Nt=1000
     
     t_min=-14.15
     t_max=30
@@ -282,11 +286,14 @@ def main():
 
     y0=np.array([1,H0])
 
-    distances(z,Om_Rs, Om_Ms, Om_Lambdas, H0s,k)
+    #distances(z,Om_Rs, Om_Ms, Om_Lambdas, H0s,k,H)
 
+    # H0s=[H0,H0,H0,H0,H0*0.9]
+    # Om_Ms=[0.3,0.3,5,1,1]
+    # Om_Rs=[0,0,0,0,0]
+    # Om_Lambdas=[0,0.7,0,0,0]
 
-
-    #a_and_H(y0,t1, t2, H0s, Om_Ms,Om_Rs,Om_Lambdas)
+    a_and_H(y0,t1, t2, H0s, Om_Ms,Om_Rs,Om_Lambdas,H)
 
 
 
@@ -306,8 +313,4 @@ main()
 # plt.plot(t,sol[:,0])
 # plt.show()
 
-a=np.array([1,2])
-b=np.array([3,4])
-print(np.append(a,b))
-
-print(1000/3.086e22*(3600*24*365*10**(9))*67)
+print(1e2,10e2,2e2)
