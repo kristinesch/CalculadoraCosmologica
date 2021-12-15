@@ -17,7 +17,7 @@ def g(y, t, H0, Om_M, Om_R, Om_Lambda):
 # def f(x,t,H0,Om_M,Om_R,Om_Lambda):
 #     return np.array([x[1],-(x[0]/2)*H0*H0*(Om_M/(np.power(x[0],3))+2*Om_R/(np.power(x[0],4))-2*Om_Lambda)])
 
-def calculate_a_H(y0,t1,t2,H0,Om_M,Om_R,Om_Lambda):
+def calculate_a(y0,t1,t2,H0,Om_M,Om_R,Om_Lambda):
 
     sol1 = integrate.odeint(g, y0, t1, args=(H0, Om_M, Om_R, Om_Lambda))
     sol2 = integrate.odeint(g, y0, t2, args=(H0, Om_M, Om_R, Om_Lambda))
@@ -37,25 +37,29 @@ def calculate_a_H(y0,t1,t2,H0,Om_M,Om_R,Om_Lambda):
     return sol1,sol2
 
 def a_and_H(y0,t1,t2,H0List,Om_MList,Om_RList,Om_LambdaList):
+    c=const.c
     sol1List=[]
     sol2List=[]
     colors=["red","blue","green","orange"]
     for i in range(len(H0List)):
-        sol1,sol2=calculate_a_H(y0,t1,t2,H0List[i],Om_MList[i],Om_RList[i],Om_LambdaList[i])
+        sol1,sol2=calculate_a(y0,t1,t2,H0List[i],Om_MList[i],Om_RList[i],Om_LambdaList[i])
         sol1List.append(sol1)
         sol2List.append(sol2)
 
     figa, axa=plt.subplots(1,1)
     figH, axH=plt.subplots(1,1)
+    figdH, axdH=plt.subplots(1,1)
 
     for i in range(len(sol1List)):
         a1=sol1List[i][:,0]
         a2=sol2List[i][:,0]
         adot1=sol1List[i][:,1]
         adot2=sol2List[i][:,1]
-        H1=adot1/a1
-        H2=adot2/a2
-        #print(H1)
+        H1=(adot1/a1)*(3.086e22/(1e3*3600*24*365*10**9))
+        H2=(adot2/a2)*(3.086e22/(1e3*3600*24*365*10**9))
+        dH1=c/H1
+        dH2=c/H2
+
         axa.plot(t1,a1, color=colors[i],label="$\Omega_M=$"+str(Om_MList[i])+" $, \Omega_R=$"+str(Om_RList[i])+
         "$, \Omega_\Lambda=$"+str(Om_LambdaList[i])+" $, H_0$="+str(round(H0List[i],2)))
         axa.plot(t2,a2,color=colors[i])
@@ -64,9 +68,14 @@ def a_and_H(y0,t1,t2,H0List,Om_MList,Om_RList,Om_LambdaList):
         "$, \Omega_\Lambda=$"+str(Om_LambdaList[i])+" $, H_0$="+str(round(H0List[i],2)))
         axH.plot(t2,H2,color=colors[i])
 
+        axdH.plot(t1,dH1, color=colors[i],label="$\Omega_M=$"+str(Om_MList[i])+" $, \Omega_R=$"+str(Om_RList[i])+
+        "$, \Omega_\Lambda=$"+str(Om_LambdaList[i])+" $, H_0$="+str(round(H0List[i],2)))
+        axdH.plot(t2,dH2,color=colors[i])
+
     figa.suptitle("a(t)")
     axa.set_xlabel("t [Gyr]")
     axa.set_ylabel("a(t)")
+    axa.set_ylim(0.00001,6)
     figa.legend(loc="center")
     figa.savefig("a_fig")
     
@@ -74,8 +83,18 @@ def a_and_H(y0,t1,t2,H0List,Om_MList,Om_RList,Om_LambdaList):
     figH.suptitle("H(t)")
     axH.set_xlabel("t [Gyr]")
     axH.set_ylabel("H(t)")
+    axH.set_ylim(0,300)
     figH.legend(loc="center")
     figH.savefig("H_fig")
+
+    figdH.suptitle("$d_H(t)$")
+    axdH.set_xlabel("t [Gyr]")
+    axdH.set_ylabel("$d_H(t)$")
+    axdH.set_yscale("log")
+    #axdH.set_ylim(0,300)
+    figdH.legend(loc="upper right")
+    figdH.savefig("dH_fig")
+
     plt.show()
 
 
@@ -227,7 +246,8 @@ def distances(z,Om_R, Om_M, Om_Lambda, H0,k):
 def main():
     year=365*24*60*60
     #Take as input?
-    H0=1000/3.086e22*(3600*24*365*1e09)*67
+    H0=1000/3.086e22*(3600*24*365*10**9)*67
+    
     #H0=67
     H0s=[H0,H0,H0,H0]
     Om_Ms=[0.3,0.3,5,1]
@@ -241,7 +261,7 @@ def main():
     z_max=15
     z=np.linspace(z_min,z_max,Nz)
 
-    Nt=10
+    Nt=1000
     
     t_min=-14.15
     t_max=30
@@ -281,3 +301,5 @@ main()
 a=np.array([1,2])
 b=np.array([3,4])
 print(np.append(a,b))
+
+print(1000/3.086e22*(3600*24*365*10**(9))*67)
